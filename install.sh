@@ -18,8 +18,9 @@
 # GPL-2.0-or-later; see NOTICE.md.
 set -euo pipefail
 
-VERSION="5.3.5-1"
-TAG="v$VERSION"
+INSTALLER_TAG="v5.3.5-2"      # this script's release
+VERSION="5.3.5-1"             # the driver package's, unchanged since v5.3.5-1
+TAG="v$VERSION"               # the release that carries the package
 REPO_URL="https://github.com/awkent01/selphy-cp1500-pi"
 BASE_URL="${SELPHY_BASE_URL:-$REPO_URL/releases/download/$TAG}"
 PKG_NAME="selphy-cp1500-pi-$VERSION-bookworm-arm64"
@@ -189,8 +190,13 @@ ours_installed() {
 }
 
 # The driver installed some other way (a hand build, a distro package).
+# Captured, never piped into grep -q: grep stops at the match, lpinfo dies of
+# SIGPIPE on the thousands of models after it, and pipefail says "not found".
 driver_present() {
-  [[ -z $ROOT ]] && lpinfo -m 2>/dev/null | grep -qF "$MODEL $MODEL_DESC"
+  [[ -z $ROOT ]] || return 1
+  local models
+  models=$(lpinfo -m 2>/dev/null) || true
+  grep -qF "$MODEL $MODEL_DESC" <<< "$models"
 }
 
 fetch() {
@@ -330,7 +336,9 @@ ensure_quirk() {
 ensure_queue() {
   local queue=$1 uri options defaults
   if ! lpstat -v "$queue" >/dev/null 2>&1; then
-    uri=$(lpinfo -v 2>/dev/null | awk -v p="$URI_PREFIX" 'index($2, p) == 1 {print $2; exit}')
+    local devices
+    devices=$(lpinfo -v 2>/dev/null) || true
+    uri=$(awk -v p="$URI_PREFIX" 'index($2, p) == 1 {print $2; exit}' <<< "$devices")
     if [[ -z $uri ]]; then
       warn "no CP1500 on USB, so no queue yet. Switch it on, plug it in, and run this again."
       return 0
@@ -350,7 +358,9 @@ ensure_queue() {
     lpadmin -p "$queue" "${want[@]}" 2>&1 | grep -v 'drivers are deprecated' >&2 || true
     note "set $queue: ${want[*]}"
   fi
-  if ! lpstat -v "$queue" | grep -qF "$URI_PREFIX"; then
+  local where
+  where=$(lpstat -v "$queue" 2>/dev/null) || true
+  if ! grep -qF "$URI_PREFIX" <<< "$where"; then
     warn "the queue $queue is not on a CP1500 ($(lpstat -v "$queue")); left as it is"
   fi
 }
@@ -387,7 +397,7 @@ main() {
 
   WORK=$(mktemp -d)
   local work=$WORK
-  log "selphy-cp1500-pi $VERSION"
+  log "selphy-cp1500-pi $INSTALLER_TAG (driver package $VERSION)"
   if ours_installed; then
     log "gutenprint 5.3.5: already installed by this script"
   elif driver_present; then

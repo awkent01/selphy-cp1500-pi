@@ -103,6 +103,17 @@ else check "a Debian package's file is refused" grep -q "/usr/bin/lp belongs to 
 fi
 ROOT=""
 
+# -- a driver already in CUPS is seen, however long lpinfo's list is ---------------
+# shellcheck disable=SC2317  # called by driver_present
+lpinfo() {
+  printf '%s %s\n' "$MODEL" "$MODEL_DESC"
+  local i
+  for ((i = 0; i < 20000; i++)); do echo "drv:///sample.drv/m$i Another Printer"; done
+}
+ROOT=""
+check "a driver already in CUPS is seen, with 20000 models after it" driver_present
+unset -f lpinfo
+
 # -- the platform gate ------------------------------------------------------------------
 # shellcheck disable=SC2317  # called by check_platform
 dpkg() {

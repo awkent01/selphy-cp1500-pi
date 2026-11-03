@@ -41,7 +41,7 @@ with its source.
 ## Install
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/awkent01/selphy-cp1500-pi/v5.3.5-1/install.sh
+curl -fsSLO https://raw.githubusercontent.com/awkent01/selphy-cp1500-pi/v5.3.5-2/install.sh
 sudo bash install.sh
 ```
 
@@ -108,7 +108,7 @@ its own directories, so a pure `/usr/local` install would be invisible to it.
 ## Uninstall
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/awkent01/selphy-cp1500-pi/v5.3.5-1/uninstall.sh
+curl -fsSLO https://raw.githubusercontent.com/awkent01/selphy-cp1500-pi/v5.3.5-2/uninstall.sh
 sudo bash uninstall.sh
 ```
 
@@ -196,6 +196,16 @@ Proven on a Raspberry Pi 5 with Bookworm, with a real CP1500:
 - Out of paper, and the printer switched off when the Pi boots.
 
 Reports of either, working or not, are welcome as issues.
+
+## Releases
+
+- **v5.3.5-2**: installer fix only. On a Pi whose CP1500 driver was installed
+  some other way, v5.3.5-1 could miss it: `lpinfo -m | grep -q` under
+  `pipefail` reads as "not found" when lpinfo is cut off by SIGPIPE, which it
+  usually is with thousands of models listed. It then tried to install over
+  that driver and stopped on the files already there. The driver package is
+  unchanged: v5.3.5-2 installs the same `v5.3.5-1` package, by the same sha256.
+- **v5.3.5-1**: the first release: gutenprint 5.3.5, built for Bookworm arm64.
 
 ## For maintainers: making a release
 
