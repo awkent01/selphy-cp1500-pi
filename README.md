@@ -172,6 +172,31 @@ Seen on the printer:
 | `install.sh` refuses: "the prebuilt driver is for Raspberry Pi OS Bookworm on arm64" | Use `--from-source`. |
 | A white border on borderless prints | The printer's own border setting. |
 
+## What has been tested, and what hasn't
+
+Proven on a Raspberry Pi 5 with Bookworm, with a real CP1500:
+
+- The driver, queue and quirk as described here: two postcards printed, and
+  the "No Ink (07)" stop and `cupsenable` recovery seen on the printer.
+- `install.sh` from the release package into a scratch directory: the tree is
+  exactly the MANIFEST, a second run changes nothing, and `uninstall.sh`
+  leaves nothing. Each refusal (corrupted download, a file a Debian package
+  owns, a foreign file, the wrong architecture) stops it before anything is
+  written. All of it is `tests/test.sh`.
+- `install.sh` run for real on a Pi that already had the driver: nothing
+  changed, not even a service restart.
+
+**Not proven yet:**
+
+- **A fresh card.** No clean Bookworm install has gone from nothing to a
+  printed postcard with this script. The scratch-directory install is the
+  closest test so far.
+- **`--from-source`.** The release was built with exactly these configure
+  flags, but `install.sh --from-source` itself has not been run end to end.
+- Out of paper, and the printer switched off when the Pi boots.
+
+Reports of either, working or not, are welcome as issues.
+
 ## For maintainers: making a release
 
 The release carries three files and their checksums:
